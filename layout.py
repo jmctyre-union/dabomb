@@ -23,16 +23,6 @@ def create_ui():
     box_container = tk.Frame(root, height=100, pady=5)
     box_container.pack(fill=tk.X)
 
-    box_frames = []
-    for i in range(5):
-        box = tk.Frame(box_container, width=80, height=80, relief=tk.RIDGE, borderwidth=2)
-        box.pack(side=tk.LEFT, padx=5, pady=5)
-        sender = tk.Label(box, text=f"User{i}", font=("Arial", 10))
-        sender.pack()
-        trust = tk.Label(box, text="TP: 5", font=("Arial", 14, "bold"))
-        trust.pack()
-        box_frames.append(box)
-
     # Section 3: Message area
     main_area = tk.Frame(root)
     main_area.pack(fill=tk.BOTH, expand=True)
@@ -92,7 +82,22 @@ def create_ui():
         if user and points:
             user_info_var.set(f"{user['name']} | Trust: {points['trust_points']} | Points: {points['game_points']}")
 
-        # You could also update unopened boxes and message area here
+        for widget in box_container.winfo_children():
+            widget.destroy()
+
+        unopened = events.load_unopened_boxes()
+        for msg in unopened:
+            sender_id = msg["sender_id"]
+            sender_user, sender_points = events.load_user_info_for(sender_id)
+            sender_name = sender_user['name'] if sender_user else f"User {sender_id}"
+            sender_trust = sender_points['trust_points'] if sender_points else "?"
+
+            box = tk.Frame(box_container, width=80, height=80, relief=tk.RIDGE, borderwidth=2)
+            box.pack(side=tk.LEFT, padx=5, pady=5)
+            sender = tk.Label(box, text=f"{sender_name}", font=("Arial", 10))
+            sender.pack()
+            trust = tk.Label(box, text=f"TP: {sender_trust}", font=("Arial", 14, "bold"))
+            trust.pack()
 
     events.context["refresh_ui"] = refresh_ui
     refresh_ui()

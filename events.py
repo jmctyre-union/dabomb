@@ -11,8 +11,14 @@ def load_user_info():
     points = api.get_points(context["user_id"])
     return user, points
 
+def load_user_info_for(uid):
+    user = api.get_user(uid)
+    points = api.get_points(uid)
+    return user, points
+
 def load_unopened_boxes():
-    return api.get_unopened_messages(context["user_id"])
+    unopened = api.get_unopened_messages(context["user_id"])
+    return unopened
 
 def load_messages():
     return api.get_messages(context["user_id"])

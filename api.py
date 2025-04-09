@@ -1,13 +1,14 @@
 import requests
 
-BASE_URL = "https://dabomb-api.onrender.com/"
+BASE_URL = "https://dabomb-api.onrender.com"
 
 def get_user(uid):
     response = requests.get(f"{BASE_URL}/users/{uid}")
     return response.json() if response.ok else None
 
 def get_unopened_messages(uid):
-    response = requests.get(f"{BASE_URL}/messages/unopened", params={"uid": uid})
+    url = f"{BASE_URL}/messages/unopened?uid={uid}"
+    response = requests.get(url)
     return response.json() if response.ok else []
 
 def get_messages(uid):
