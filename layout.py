@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import events
+import json
 
 
 def create_ui():
@@ -30,8 +31,9 @@ def create_ui():
     # User list
     user_list = tk.Listbox(main_area, width=20)
     user_list.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
-    for name in ["Bob", "Charlie"]:
-        user_list.insert(tk.END, name)
+    users = events.load_users()
+    for user in users:
+        user_list.insert(tk.END, user['name'])
 
     # Messages and input area
     msg_area = tk.Frame(main_area)

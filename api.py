@@ -2,6 +2,10 @@ import requests
 
 BASE_URL = "https://dabomb-api.onrender.com"
 
+def get_users():
+    response = requests.get(f"{BASE_URL}/users")
+    return response.json() if response.ok else None
+
 def get_user(uid):
     response = requests.get(f"{BASE_URL}/users/{uid}")
     return response.json() if response.ok else None
