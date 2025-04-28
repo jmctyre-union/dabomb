@@ -3,7 +3,7 @@ import api
 # Example context object to hold current user ID and callbacks
 # DON'T CHANGE THIS!
 context = {
-    "user_id": 1, # THIS IS WERE YOU ENTER YOUR UID!!
+    "user_id": 1, # THIS IS WERE YOU ENTER YOUR UID, do not enter someone else's id or you will die!!
     "refresh_ui": None  # this will be set by layout to trigger UI refresh
 }
 
