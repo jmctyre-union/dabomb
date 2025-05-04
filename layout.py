@@ -9,7 +9,7 @@ def create_ui():
     root.geometry("800x600")
 
     context = {
-        "receiver_id": 3
+        "receiver_id": None
     }
 
     # Section 1: Header
@@ -35,7 +35,8 @@ def create_ui():
     user_list = tk.Listbox(main_area, width=20)
     user_list.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
     users = events.load_users()
-    user_id_map = {}
+    user_id_map = {"Everyone": None}
+    user_list.insert(tk.END, "Everyone")
     for idx, user in enumerate(users):
         user_list.insert(tk.END, user['name'])
         user_id_map[user['name']] = user['id']
@@ -68,20 +69,11 @@ def create_ui():
     def send(kind):
         text = msg_entry.get()
         points = point_entry.get()
-        if context["receiver_id"] and text:
+        if text:
             events.handle_send_message(context["receiver_id"], text, points, kind)
             msg_entry.delete(0, tk.END)
             point_entry.delete(0, tk.END)
             refresh_ui()
-
-    def on_user_select(event):
-        selection = user_list.curselection()
-        if selection:
-            name = user_list.get(selection[0])
-            context["receiver_id"] = user_id_map.get(name)
-            refresh_ui()
-
-    user_list.bind('<<ListboxSelect>>', on_user_select)
 
     btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send("plain"))
     btn_plain.pack(side=tk.LEFT, padx=5)
@@ -92,15 +84,33 @@ def create_ui():
     btn_gift = tk.Button(button_frame, text="Send Gift", command=lambda: send("gift"))
     btn_gift.pack(side=tk.LEFT, padx=5)
 
+    def update_receiver_ui():
+        receiver_id = context["receiver_id"]
+        if receiver_id is None:
+            receiver_name_var.set("Send To: Everyone")
+            btn_bomb.config(state=tk.DISABLED)
+            btn_gift.config(state=tk.DISABLED)
+        else:
+            receiver_info_tuple = events.load_user_info_for(receiver_id)
+            if receiver_info_tuple:
+                receiver_info = receiver_info_tuple[0]
+                receiver_name_var.set(f"Send To: {receiver_info['name']}")
+            btn_bomb.config(state=tk.NORMAL)
+            btn_gift.config(state=tk.NORMAL)
+
+    def on_user_select(event):
+        selection = user_list.curselection()
+        if selection:
+            name = user_list.get(selection[0])
+            context["receiver_id"] = user_id_map.get(name)
+            update_receiver_ui()
+
+    user_list.bind('<<ListboxSelect>>', on_user_select)
+
     def refresh_ui():
         user, points = events.load_user_info()
 
-        receiver_info_tuple = events.load_user_info_for(context["receiver_id"])
-        if receiver_info_tuple:
-            receiver_info = receiver_info_tuple[0]
-            receiver_name_var.set(f"Send To: {receiver_info['name']}")
-        else:
-            receiver_name_var.set("Send To: All")
+        update_receiver_ui()
 
         if user and points:
             user_info_var.set(f"{user['name']} | Trust: {points['trust_points']} | Points: {points['game_points']}")
