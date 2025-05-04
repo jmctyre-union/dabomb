@@ -3,11 +3,14 @@ from tkinter import ttk
 import events
 import json
 
-
 def create_ui():
     root = tk.Tk()
     root.title("dabomb")
     root.geometry("800x600")
+
+    context = {
+        "receiver_id": 3
+    }
 
     # Section 1: Header
     header = tk.Frame(root, pady=5)
@@ -32,8 +35,10 @@ def create_ui():
     user_list = tk.Listbox(main_area, width=20)
     user_list.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
     users = events.load_users()
-    for user in users:
+    user_id_map = {}
+    for idx, user in enumerate(users):
         user_list.insert(tk.END, user['name'])
+        user_id_map[user['name']] = user['id']
 
     # Messages and input area
     msg_area = tk.Frame(main_area)
@@ -46,6 +51,10 @@ def create_ui():
     input_frame = tk.Frame(msg_area)
     input_frame.pack(fill=tk.X, padx=5, pady=5)
 
+    receiver_name_var = tk.StringVar()
+    receiver_name_label = tk.Label(input_frame, textvariable=receiver_name_var, font=("Arial", 12, "bold"))
+    receiver_name_label.pack(side=tk.LEFT, padx=5)
+
     msg_entry = tk.Entry(input_frame)
     msg_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
 
@@ -56,19 +65,23 @@ def create_ui():
     button_frame = tk.Frame(msg_area)
     button_frame.pack(pady=5)
 
-    def get_selected_user():
-        selected = user_list.curselection()
-        return user_list.get(selected[0]) if selected else None
-
     def send(kind):
-        receiver = get_selected_user()
         text = msg_entry.get()
         points = point_entry.get()
-        if receiver and text:
-            events.handle_send_message(receiver, text, points, kind)
+        if context["receiver_id"] and text:
+            events.handle_send_message(context["receiver_id"], text, points, kind)
             msg_entry.delete(0, tk.END)
             point_entry.delete(0, tk.END)
             refresh_ui()
+
+    def on_user_select(event):
+        selection = user_list.curselection()
+        if selection:
+            name = user_list.get(selection[0])
+            context["receiver_id"] = user_id_map.get(name)
+            refresh_ui()
+
+    user_list.bind('<<ListboxSelect>>', on_user_select)
 
     btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send("plain"))
     btn_plain.pack(side=tk.LEFT, padx=5)
@@ -81,6 +94,14 @@ def create_ui():
 
     def refresh_ui():
         user, points = events.load_user_info()
+
+        receiver_info_tuple = events.load_user_info_for(context["receiver_id"])
+        if receiver_info_tuple:
+            receiver_info = receiver_info_tuple[0]
+            receiver_name_var.set(f"Send To: {receiver_info['name']}")
+        else:
+            receiver_name_var.set("Send To: All")
+
         if user and points:
             user_info_var.set(f"{user['name']} | Trust: {points['trust_points']} | Points: {points['game_points']}")
 
