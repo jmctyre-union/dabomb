@@ -45,7 +45,7 @@ def create_ui():
     msg_area = tk.Frame(main_area)
     msg_area.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-    messages = tk.Text(msg_area, state='disabled', height=20)
+    messages = tk.Text(msg_area, state='disabled', height=20, wrap=tk.WORD)
     messages.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
     # Input row
@@ -131,6 +131,39 @@ def create_ui():
             sender.pack()
             trust = tk.Label(box, text=f"TP: {sender_trust}", font=("Arial", 14, "bold"))
             trust.pack()
+
+        # Update message area
+        all_messages = events.load_messages()
+        messages.config(state='normal')
+        messages.delete(1.0, tk.END)
+
+        for msg in sorted(all_messages, key=lambda m: m['sent_at']):
+            sender_user, _ = events.load_user_info_for(msg['sender_id'])
+            sender_name = sender_user['name'] if sender_user else f"User {msg['sender_id']}"
+            receiver_mention = f"@{events.load_user_info_for(msg['receiver_id'])[0]['name']}" if msg['receiver_id'] else ""
+
+            label = ""
+            if msg['message_type'] == 'gift':
+                label = "GIFT"
+                label_color = "green"
+                label_points = "+3"
+            elif msg['message_type'] == 'bomb':
+                label = "BOMB"
+                label_color = "red"
+                label_points = "-5"
+            else:
+                label = ""
+                label_color = None
+                label_points = ""
+
+            formatted = f"{sender_name} : {receiver_mention}"
+            if label:
+                formatted += f" : {label}|{label_points}"
+            formatted += f" : {msg['message']}\n"
+
+            messages.insert(tk.END, formatted)
+        messages.config(state='disabled')
+        messages.see(tk.END)
 
     events.context["refresh_ui"] = refresh_ui
     refresh_ui()
