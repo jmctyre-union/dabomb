@@ -28,7 +28,8 @@ def send_message(sender_id, receiver_id, message_type, message):
         "sender_id": sender_id,
         "receiver_id": receiver_id,
         "message_type": message_type,
-        "message": message
+        "message": message,
+        "is_opened": (True if message_type == 'plain' else False)
     }
     response = requests.post(f"{BASE_URL}/messages/send", json=payload)
     return response.json() if response.ok else None

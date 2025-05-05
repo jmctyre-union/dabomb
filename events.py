@@ -31,7 +31,30 @@ def load_messages():
 def load_all_opened_messages():
     return api.get_all_opened_messages()
 
-def handle_send_message(receiver_id, message_text, point_value, message_type):
+def handle_send_message(receiver_id, message_text, point_value):
+    message_type = "plain"
+    if not message_text.strip():
+        return False
+    return api.send_message(
+        sender_id=context["user_id"],
+        receiver_id=receiver_id,
+        message_type=message_type,
+        message=message_text.strip()
+    )
+    
+def handle_send_gift(receiver_id, message_text, point_value):
+    message_type = "gift"
+    if not message_text.strip():
+        return False
+    return api.send_message(
+        sender_id=context["user_id"],
+        receiver_id=receiver_id,
+        message_type=message_type,
+        message=message_text.strip()
+    )
+    
+def handle_send_bomb(receiver_id, message_text, point_value):
+    message_type = "bomb"
     if not message_text.strip():
         return False
     return api.send_message(

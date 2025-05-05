@@ -67,13 +67,13 @@ def create_ui():
     button_frame = tk.Frame(msg_area)
     button_frame.pack(pady=5)
 
-    btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send("plain"))
+    btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send_plain())
     btn_plain.pack(side=tk.LEFT, padx=5)
 
-    btn_bomb = tk.Button(button_frame, text="Send Bomb", command=lambda: send("bomb"), state=tk.DISABLED)
+    btn_bomb = tk.Button(button_frame, text="Send Bomb", command=lambda: send_bomb(), state=tk.DISABLED)
     btn_bomb.pack(side=tk.LEFT, padx=5)
 
-    btn_gift = tk.Button(button_frame, text="Send Gift", command=lambda: send("gift"), state=tk.DISABLED)
+    btn_gift = tk.Button(button_frame, text="Send Gift", command=lambda: send_gift(), state=tk.DISABLED)
     btn_gift.pack(side=tk.LEFT, padx=5)
 
     def refresh_user_info():
@@ -132,17 +132,42 @@ def create_ui():
             return user_id_map.get(name)
         return None
 
-    def send(kind):
+    def send_plain():
         current_receiver = receiver['id']
         text = msg_entry.get()
         points = point_entry.get()
-        if current_receiver is None and kind != "plain":
-            return  # Disallow bomb/gift to Everyone
+
         if text:
-            events.handle_send_message(current_receiver, text, points, kind)
+            events.handle_send_message(current_receiver, text, points)
             msg_entry.delete(0, tk.END)
             point_entry.delete(0, tk.END)
             refresh_messages()
+
+    def send_gift():
+        current_receiver = receiver['id']
+        text = msg_entry.get()
+        points = point_entry.get()
+        if current_receiver is None:
+            return
+        if text:
+            events.handle_send_gift(current_receiver, text, points)
+            msg_entry.delete(0, tk.END)
+            point_entry.delete(0, tk.END)
+            refresh_messages()
+            refresh_unopened_boxes()  # Update boxes after sending gift
+
+    def send_bomb():
+        current_receiver = receiver['id']
+        text = msg_entry.get()
+        points = point_entry.get()
+        if current_receiver is None:
+            return
+        if text:
+            events.handle_send_bomb(current_receiver, text, points)
+            msg_entry.delete(0, tk.END)
+            point_entry.delete(0, tk.END)
+            refresh_messages()
+            refresh_unopened_boxes()  # Update boxes after sending bomb
 
     def on_user_select(event):
         sel = user_list.curselection()
