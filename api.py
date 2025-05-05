@@ -19,6 +19,10 @@ def get_messages(uid):
     response = requests.get(f"{BASE_URL}/messages", params={"uid": uid})
     return response.json() if response.ok else []
 
+def get_all_opened_messages():
+    response = requests.get(f"{BASE_URL}/messages/all/opened")
+    return response.json() if response.ok else []
+
 def send_message(sender_id, receiver_id, message_type, message):
     payload = {
         "sender_id": sender_id,

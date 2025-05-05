@@ -3,7 +3,7 @@ import api
 # Example context object to hold current user ID and callbacks
 # DON'T CHANGE THIS!
 context = {
-    "user_id": 1, # THIS IS WERE YOU ENTER YOUR UID, do not enter someone else's id or you will die!!
+    "user_id": 1,  # THIS IS WHERE YOU ENTER YOUR UID, do not enter someone else's id or you will die!!
     "refresh_ui": None  # this will be set by layout to trigger UI refresh
 }
 
@@ -28,6 +28,9 @@ def load_unopened_boxes():
 def load_messages():
     return api.get_messages(context["user_id"])
 
+def load_all_opened_messages():
+    return api.get_all_opened_messages()
+
 def handle_send_message(receiver_id, message_text, point_value, message_type):
     if not message_text.strip():
         return False
@@ -43,3 +46,10 @@ def handle_open_message(message_id):
     if success and context["refresh_ui"]:
         context["refresh_ui"]()  # trigger UI refresh
     return success
+
+def calculate_points_display(kind):
+    if kind == "gift":
+        return "+3"
+    elif kind == "bomb":
+        return "-5"
+    return ""

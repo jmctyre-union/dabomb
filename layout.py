@@ -3,14 +3,13 @@ from tkinter import ttk
 import events
 import json
 
+
 def create_ui():
     root = tk.Tk()
     root.title("dabomb")
     root.geometry("800x600")
 
-    context = {
-        "receiver_id": None
-    }
+    receiver = {'id': None}  # Track receiver ID
 
     # Section 1: Header
     header = tk.Frame(root, pady=5)
@@ -34,10 +33,11 @@ def create_ui():
     # User list
     user_list = tk.Listbox(main_area, width=20)
     user_list.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
+
     users = events.load_users()
-    user_id_map = {"Everyone": None}
     user_list.insert(tk.END, "Everyone")
-    for idx, user in enumerate(users):
+    user_id_map = {"Everyone": None}
+    for user in users:
         user_list.insert(tk.END, user['name'])
         user_id_map[user['name']] = user['id']
 
@@ -45,16 +45,16 @@ def create_ui():
     msg_area = tk.Frame(main_area)
     msg_area.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-    messages = tk.Text(msg_area, state='disabled', height=20, wrap=tk.WORD)
+    messages = tk.Text(msg_area, state='disabled', height=20)
     messages.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
     # Input row
     input_frame = tk.Frame(msg_area)
     input_frame.pack(fill=tk.X, padx=5, pady=5)
 
-    receiver_name_var = tk.StringVar()
-    receiver_name_label = tk.Label(input_frame, textvariable=receiver_name_var, font=("Arial", 12, "bold"))
-    receiver_name_label.pack(side=tk.LEFT, padx=5)
+    receiver_name_var = tk.StringVar(value="Send To: Everyone")
+    receiver_name = tk.Label(input_frame, textvariable=receiver_name_var, font=("Arial", 12, "bold"))
+    receiver_name.pack(side=tk.LEFT, padx=5)
 
     msg_entry = tk.Entry(input_frame)
     msg_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
@@ -66,55 +66,12 @@ def create_ui():
     button_frame = tk.Frame(msg_area)
     button_frame.pack(pady=5)
 
-    def send(kind):
-        text = msg_entry.get()
-        points = point_entry.get()
-        if text:
-            events.handle_send_message(context["receiver_id"], text, points, kind)
-            msg_entry.delete(0, tk.END)
-            point_entry.delete(0, tk.END)
-            refresh_ui()
-
-    btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send("plain"))
-    btn_plain.pack(side=tk.LEFT, padx=5)
-
-    btn_bomb = tk.Button(button_frame, text="Send Bomb", command=lambda: send("bomb"))
-    btn_bomb.pack(side=tk.LEFT, padx=5)
-
-    btn_gift = tk.Button(button_frame, text="Send Gift", command=lambda: send("gift"))
-    btn_gift.pack(side=tk.LEFT, padx=5)
-
-    def update_receiver_ui():
-        receiver_id = context["receiver_id"]
-        if receiver_id is None:
-            receiver_name_var.set("Send To: Everyone")
-            btn_bomb.config(state=tk.DISABLED)
-            btn_gift.config(state=tk.DISABLED)
-        else:
-            receiver_info_tuple = events.load_user_info_for(receiver_id)
-            if receiver_info_tuple:
-                receiver_info = receiver_info_tuple[0]
-                receiver_name_var.set(f"Send To: {receiver_info['name']}")
-            btn_bomb.config(state=tk.NORMAL)
-            btn_gift.config(state=tk.NORMAL)
-
-    def on_user_select(event):
-        selection = user_list.curselection()
-        if selection:
-            name = user_list.get(selection[0])
-            context["receiver_id"] = user_id_map.get(name)
-            update_receiver_ui()
-
-    user_list.bind('<<ListboxSelect>>', on_user_select)
-
-    def refresh_ui():
+    def refresh_user_info():
         user, points = events.load_user_info()
-
-        update_receiver_ui()
-
         if user and points:
             user_info_var.set(f"{user['name']} | Trust: {points['trust_points']} | Points: {points['game_points']}")
 
+    def refresh_unopened_boxes():
         for widget in box_container.winfo_children():
             widget.destroy()
 
@@ -132,38 +89,74 @@ def create_ui():
             trust = tk.Label(box, text=f"TP: {sender_trust}", font=("Arial", 14, "bold"))
             trust.pack()
 
-        # Update message area
-        all_messages = events.load_messages()
+    def refresh_messages():
         messages.config(state='normal')
         messages.delete(1.0, tk.END)
 
-        for msg in sorted(all_messages, key=lambda m: m['sent_at']):
-            sender_user, _ = events.load_user_info_for(msg['sender_id'])
-            sender_name = sender_user['name'] if sender_user else f"User {msg['sender_id']}"
-            receiver_mention = f"@{events.load_user_info_for(msg['receiver_id'])[0]['name']}" if msg['receiver_id'] else ""
-
+        opened_msgs = events.load_all_opened_messages()
+        for msg in opened_msgs:
+            sender_id = msg['sender_id']
+            receiver_id = msg.get('receiver_id')
+            sender_user, _ = events.load_user_info_for(sender_id)
+            sender_name = sender_user['name'] if sender_user else f"User {sender_id}"
+            receiver_tag = f"@{events.load_user_info_for(receiver_id)[0]['name']}" if receiver_id else "All"
+            kind = msg['message_type']
+            points = events.calculate_points_display(kind)
             label = ""
-            if msg['message_type'] == 'gift':
+            if kind == "gift":
                 label = "GIFT"
-                label_color = "green"
-                label_points = "+3"
-            elif msg['message_type'] == 'bomb':
+            elif kind == "bomb":
                 label = "BOMB"
-                label_color = "red"
-                label_points = "-5"
-            else:
-                label = ""
-                label_color = None
-                label_points = ""
 
-            formatted = f"{sender_name} : {receiver_mention}"
-            if label:
-                formatted += f" : {label}|{label_points}"
-            formatted += f" : {msg['message']}\n"
+            text = msg['message']
+            display = f"{sender_name} : {receiver_tag} : {label}|{points} : {text}\n"
+            messages.insert(tk.END, display)
 
-            messages.insert(tk.END, formatted)
         messages.config(state='disabled')
         messages.see(tk.END)
+
+    def get_selected_user():
+        selected = user_list.curselection()
+        if selected:
+            name = user_list.get(selected[0])
+            return user_id_map.get(name)
+        return None
+
+    def send(kind):
+        current_receiver = receiver['id']
+        text = msg_entry.get()
+        points = point_entry.get()
+        if current_receiver is None and kind != "plain":
+            return  # Disallow bomb/gift to Everyone
+        if text:
+            events.handle_send_message(current_receiver, text, points, kind)
+            msg_entry.delete(0, tk.END)
+            point_entry.delete(0, tk.END)
+            refresh_messages()
+
+    def on_user_select(event):
+        sel = user_list.curselection()
+        if sel:
+            name = user_list.get(sel[0])
+            uid = user_id_map.get(name)
+            receiver['id'] = uid
+            receiver_name_var.set(f"Send To: {name}")
+
+    user_list.bind("<<ListboxSelect>>", on_user_select)
+
+    btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send("plain"))
+    btn_plain.pack(side=tk.LEFT, padx=5)
+
+    btn_bomb = tk.Button(button_frame, text="Send Bomb", command=lambda: send("bomb"))
+    btn_bomb.pack(side=tk.LEFT, padx=5)
+
+    btn_gift = tk.Button(button_frame, text="Send Gift", command=lambda: send("gift"))
+    btn_gift.pack(side=tk.LEFT, padx=5)
+
+    def refresh_ui():
+        refresh_user_info()
+        refresh_unopened_boxes()
+        refresh_messages()
 
     events.context["refresh_ui"] = refresh_ui
     refresh_ui()
