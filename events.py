@@ -9,7 +9,7 @@ context = {
 
 def load_users():
     users = api.get_users()
-    return users
+    return sorted(users, key=lambda u: u["game_points"], reverse=True)
 
 def load_user_info():
     user = api.get_user(context["user_id"])

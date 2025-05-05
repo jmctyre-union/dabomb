@@ -38,8 +38,9 @@ def create_ui():
     user_list.insert(tk.END, "Everyone")
     user_id_map = {"Everyone": None}
     for user in users:
-        user_list.insert(tk.END, user['name'])
-        user_id_map[user['name']] = user['id']
+        display_name = f"{user['name']}: {user['game_points']}"
+        user_list.insert(tk.END, display_name)
+        user_id_map[display_name] = user['id']
 
     # Messages and input area
     msg_area = tk.Frame(main_area)
@@ -65,6 +66,15 @@ def create_ui():
     # Buttons
     button_frame = tk.Frame(msg_area)
     button_frame.pack(pady=5)
+
+    btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send("plain"))
+    btn_plain.pack(side=tk.LEFT, padx=5)
+
+    btn_bomb = tk.Button(button_frame, text="Send Bomb", command=lambda: send("bomb"), state=tk.DISABLED)
+    btn_bomb.pack(side=tk.LEFT, padx=5)
+
+    btn_gift = tk.Button(button_frame, text="Send Gift", command=lambda: send("gift"), state=tk.DISABLED)
+    btn_gift.pack(side=tk.LEFT, padx=5)
 
     def refresh_user_info():
         user, points = events.load_user_info()
@@ -141,17 +151,14 @@ def create_ui():
             uid = user_id_map.get(name)
             receiver['id'] = uid
             receiver_name_var.set(f"Send To: {name}")
+            if uid is None:
+                btn_bomb.config(state=tk.DISABLED)
+                btn_gift.config(state=tk.DISABLED)
+            else:
+                btn_bomb.config(state=tk.NORMAL)
+                btn_gift.config(state=tk.NORMAL)
 
     user_list.bind("<<ListboxSelect>>", on_user_select)
-
-    btn_plain = tk.Button(button_frame, text="Send Plain", command=lambda: send("plain"))
-    btn_plain.pack(side=tk.LEFT, padx=5)
-
-    btn_bomb = tk.Button(button_frame, text="Send Bomb", command=lambda: send("bomb"))
-    btn_bomb.pack(side=tk.LEFT, padx=5)
-
-    btn_gift = tk.Button(button_frame, text="Send Gift", command=lambda: send("gift"))
-    btn_gift.pack(side=tk.LEFT, padx=5)
 
     def refresh_ui():
         refresh_user_info()
