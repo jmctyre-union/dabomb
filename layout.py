@@ -1,8 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import events
 import json
-
 
 def create_ui():
     root = tk.Tk()
@@ -81,6 +80,16 @@ def create_ui():
         if user and points:
             user_info_var.set(f"{user['name']} | Trust: {points['trust_points']} | Points: {points['game_points']}")
 
+    def on_open_hover_enter(event):
+        event.widget.config(bg="#bbbbbb")
+
+    def on_open_hover_leave(event):
+        event.widget.config(bg="#f0f0f0")
+
+    def on_box_click(mid):
+        if messagebox.askyesno("Confirm", "Are you sure?"):
+            events.handle_open_message(mid)
+
     def refresh_unopened_boxes():
         for widget in box_container.winfo_children():
             widget.destroy()
@@ -88,16 +97,23 @@ def create_ui():
         unopened = events.load_unopened_boxes()
         for msg in unopened:
             sender_id = msg["sender_id"]
+            message_id = msg["id"]
             sender_user, sender_points = events.load_user_info_for(sender_id)
             sender_name = sender_user['name'] if sender_user else f"User {sender_id}"
             sender_trust = sender_points['trust_points'] if sender_points else "?"
 
-            box = tk.Frame(box_container, width=80, height=80, relief=tk.RIDGE, borderwidth=2)
+            box = tk.Frame(box_container, width=80, height=100, relief=tk.RIDGE, borderwidth=2)
             box.pack(side=tk.LEFT, padx=5, pady=5)
+
             sender = tk.Label(box, text=f"{sender_name}", font=("Arial", 10))
             sender.pack()
             trust = tk.Label(box, text=f"TP: {sender_trust}", font=("Arial", 14, "bold"))
             trust.pack()
+
+            open_btn = tk.Button(box, text="Open", bg="#f0f0f0", relief=tk.RAISED, command=lambda mid=message_id: on_box_click(mid))
+            open_btn.pack(pady=2)
+            open_btn.bind("<Enter>", on_open_hover_enter)
+            open_btn.bind("<Leave>", on_open_hover_leave)
 
     def refresh_messages():
         messages.config(state='normal')
@@ -154,7 +170,7 @@ def create_ui():
             msg_entry.delete(0, tk.END)
             point_entry.delete(0, tk.END)
             refresh_messages()
-            refresh_unopened_boxes()  # Update boxes after sending gift
+            refresh_unopened_boxes()
 
     def send_bomb():
         current_receiver = receiver['id']
@@ -167,7 +183,7 @@ def create_ui():
             msg_entry.delete(0, tk.END)
             point_entry.delete(0, tk.END)
             refresh_messages()
-            refresh_unopened_boxes()  # Update boxes after sending bomb
+            refresh_unopened_boxes()
 
     def on_user_select(event):
         sel = user_list.curselection()
