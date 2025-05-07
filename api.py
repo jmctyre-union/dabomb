@@ -10,6 +10,10 @@ def get_user(uid):
     response = requests.get(f"{BASE_URL}/users/{uid}")
     return response.json() if response.ok else None
 
+def getId(name):
+    response = requests.get(f"{BASE_URL}/users/get/id?name={name}")
+    return response.json() if response.ok else None
+
 def get_unopened_messages(uid):
     url = f"{BASE_URL}/messages/unopened?uid={uid}"
     response = requests.get(url)

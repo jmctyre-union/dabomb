@@ -11,6 +11,9 @@ def load_users():
     users = api.get_users()
     return sorted(users, key=lambda u: u["game_points"], reverse=True)
 
+def getId(name):
+    return api.getId(name)
+
 def load_user_info():
     user = api.get_user(context["user_id"])
     points = api.get_points(context["user_id"])

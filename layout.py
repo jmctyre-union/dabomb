@@ -41,7 +41,7 @@ def create_ui():
     for user in users:
         display_name = f"{user['name']}: {user['game_points']}"
         user_list.insert(tk.END, display_name)
-        user_id_map[display_name] = user['id']
+        user_id_map[display_name] = events.getId(user['name'])['id'];
 
     msg_area = tk.Frame(main_area)
     msg_area.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
