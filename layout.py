@@ -8,28 +8,30 @@ def create_ui():
     root.title("dabomb")
     root.geometry("800x600")
 
-    receiver = {'id': None}  # Track receiver ID
+    receiver = {'id': None}
 
-    # Section 1: Header
+    # Header
     header = tk.Frame(root, pady=5)
     header.pack(fill=tk.X)
 
     title = tk.Label(header, text="dabomb", font=("Arial", 14, "bold"))
     title.pack(side=tk.LEFT, padx=10)
 
+    refresh_button = tk.Button(header, text="Refresh", command=lambda: refresh_ui())
+    refresh_button.pack(side=tk.RIGHT, padx=5)
+
     user_info_var = tk.StringVar()
     user_info = tk.Label(header, textvariable=user_info_var, anchor="e")
-    user_info.pack(side=tk.RIGHT, padx=10)
+    user_info.pack(side=tk.RIGHT, padx=5)
 
-    # Section 2: Unopened boxes
+    # Unopened boxes
     box_container = tk.Frame(root, height=100, pady=5)
     box_container.pack(fill=tk.X)
 
-    # Section 3: Message area
+    # Message area
     main_area = tk.Frame(root)
     main_area.pack(fill=tk.BOTH, expand=True)
 
-    # User list
     user_list = tk.Listbox(main_area, width=20)
     user_list.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
 
@@ -41,14 +43,12 @@ def create_ui():
         user_list.insert(tk.END, display_name)
         user_id_map[display_name] = user['id']
 
-    # Messages and input area
     msg_area = tk.Frame(main_area)
     msg_area.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
     messages = tk.Text(msg_area, state='disabled', height=20)
     messages.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-    # Input row
     input_frame = tk.Frame(msg_area)
     input_frame.pack(fill=tk.X, padx=5, pady=5)
 
@@ -62,7 +62,6 @@ def create_ui():
     point_entry = tk.Entry(input_frame, width=5)
     point_entry.pack(side=tk.LEFT, padx=5)
 
-    # Buttons
     button_frame = tk.Frame(msg_area)
     button_frame.pack(pady=5)
 
